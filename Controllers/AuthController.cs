@@ -8,7 +8,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
-using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 
@@ -19,20 +18,15 @@ namespace HospitalManagementSystem.Controllers
         private readonly DapperContext _context;
         private readonly IConfiguration _config;
 
-        public AuthController(DapperContext dapper,IConfiguration config)
+        public AuthController(DapperContext dapper, IConfiguration config)
         {
+            _context = dapper;
             _config = config;
-            _context = dapper;  
         }
-        public async Task<IActionResult> Index()
-        {
-            return View();
-        }
+
         [HttpGet]
-        public async Task<IActionResult> RegisterPatient()
-        { 
-            return  View();
-        }
+        public IActionResult RegisterPatient() => View();
+
         [HttpPost]
         public async Task<IActionResult> RegisterPatient(RegisterDto dto)
         {
@@ -40,8 +34,6 @@ namespace HospitalManagementSystem.Controllers
                 return View(dto);
 
             using var db = _context.CreateConnection();
-            
-
             try
             {
                 var hashedPassword = new PasswordHasher<User>().HashPassword(null, dto.Password);
@@ -64,30 +56,33 @@ namespace HospitalManagementSystem.Controllers
 
                 var userId = parameters.Get<int>("@UserId");
 
-                return RedirectToAction("Login", "Account");
+                // Optionally generate refresh token immediately
+                await GenerateAndSaveRefreshToken(userId);
+
+                return RedirectToAction("Login");
             }
             catch (Exception ex)
             {
-                
                 ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
                 return View(dto);
             }
         }
 
         [HttpGet]
-        public async Task<IActionResult> Login()
-        {
-            return View();
-        }
+        public IActionResult Login() => View();
+
         [HttpPost]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             if (!ModelState.IsValid)
                 return View(dto);
 
-            using var db= _context.CreateConnection();
+            using var db = _context.CreateConnection();
+            var user = await db.QueryFirstOrDefaultAsync<User>(
+                "SELECT * FROM Users WHERE Email = @Email",
+                new { dto.Email }
+            );
 
-            var user = await db.QueryFirstOrDefaultAsync<User>("Select * from Users where Email=@Email", new { @Email = dto.Email });
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid credentials");
@@ -95,41 +90,42 @@ namespace HospitalManagementSystem.Controllers
             }
 
             var result = new PasswordHasher<User>().VerifyHashedPassword(null, user.PasswordHash, dto.Password);
-
             if (result == PasswordVerificationResult.Failed)
             {
                 ModelState.AddModelError(string.Empty, "Invalid credentials");
                 return View(dto);
             }
-            var token = CreateToken(user);
+
+            var token = await CreateToken(user);
 
             Response.Cookies.Append("AuthToken", token, new CookieOptions
             {
-                Expires = DateTime.UtcNow.AddMinutes(7),
+                Expires = DateTime.UtcNow.AddMinutes(30),
                 HttpOnly = true,
                 SameSite = SameSiteMode.Strict,
                 Secure = true
             });
+
+            // Generate refresh token
+            await GenerateAndSaveRefreshToken(user.UserId);
+
             return RedirectToAction("Dashboard", "Home");
         }
 
-
-        private string CreateToken(User user) 
+        private async Task<string> CreateToken(User user)
         {
             using var db = _context.CreateConnection();
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
-                new Claim(ClaimTypes.Email,user.Email),
-                new Claim(ClaimTypes.Role,user.Role),
-
-                
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             if (user.Role == "Patient")
             {
-                var patientId = db.ExecuteScalar<int?>(
+                var patientId = await db.ExecuteScalarAsync<int?>(
                     "SELECT PatientId FROM Patients WHERE UserId = @UserId",
                     new { user.UserId }
                 );
@@ -140,7 +136,7 @@ namespace HospitalManagementSystem.Controllers
 
             if (user.Role == "Doctor")
             {
-                var doctorId = db.ExecuteScalar<int?>(
+                var doctorId = await db.ExecuteScalarAsync<int?>(
                     "SELECT DoctorId FROM Doctors WHERE UserId = @UserId",
                     new { user.UserId }
                 );
@@ -162,8 +158,74 @@ namespace HospitalManagementSystem.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        
 
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
 
+        private async Task<string> GenerateAndSaveRefreshToken(int userId)
+        {
+            var refreshToken = GenerateRefreshToken();
+            var expiryDate = DateTime.UtcNow.AddDays(7);
+
+            using var db = _context.CreateConnection();
+            await db.ExecuteAsync(
+                "INSERT INTO RefreshTokens (UserId, Token, ExpiryDate, Revoked) " +
+                "VALUES (@UserId, @Token, @ExpiryDate, @Revoked)",
+                new { UserId = userId, Token = refreshToken, ExpiryDate = expiryDate, Revoked = false }
+            );
+
+            return refreshToken;
+        }
+
+        private async Task<RefreshToken?> ValidateRefreshToken(string token, int userId)
+        {
+            using var db = _context.CreateConnection();
+            return await db.QueryFirstOrDefaultAsync<RefreshToken>(
+                "SELECT * FROM RefreshTokens WHERE Token=@Token AND UserId=@UserId AND ExpiryDate > GETUTCDATE() AND Revoked=0",
+                new { Token = token, UserId = userId }
+            );
+        }
+
+        private async Task RevokeRefreshToken(string token)
+        {
+            using var db = _context.CreateConnection();
+            await db.ExecuteAsync(
+                "UPDATE RefreshTokens SET Revoked=1 WHERE Token=@Token",
+                new { Token = token }
+            );
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
+        {
+            var refreshToken = await ValidateRefreshToken(dto.RefreshToken, dto.UserId);
+            if (refreshToken == null)
+                return Unauthorized("Invalid or expired refresh token");
+
+            await RevokeRefreshToken(dto.RefreshToken);
+
+            using var db = _context.CreateConnection();
+            var user = await db.QueryFirstOrDefaultAsync<User>(
+                "SELECT * FROM Users WHERE UserId = @UserId",
+                new { UserId = dto.UserId }
+            );
+
+            if (user == null)
+                return Unauthorized();
+
+            var newToken = await CreateToken(user);
+            var newRefreshToken = await GenerateAndSaveRefreshToken(user.UserId);
+
+            return Ok(new TokenResponseDto
+            {
+                AccessToken = newToken,
+                RefreshToken = newRefreshToken
+            });
+        }
     }
 }
