@@ -1,6 +1,6 @@
 ﻿using Dapper;
 using HospitalManagementSystem.Data;
-using HospitalManagementSystem.Dtos;
+using HospitalManagementSystem.Dtos.Auth;
 using HospitalManagementSystem.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
+using System.Numerics;
 using System.Security.Claims;
 using System.Text;
 
@@ -30,7 +31,7 @@ namespace HospitalManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> RegisterPatient()
         { 
-            return View();
+            return  View();
         }
         [HttpPost]
         public async Task<IActionResult> RegisterPatient(RegisterDto dto)
@@ -115,6 +116,8 @@ namespace HospitalManagementSystem.Controllers
 
         private string CreateToken(User user) 
         {
+            using var db = _context.CreateConnection();
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
@@ -123,6 +126,28 @@ namespace HospitalManagementSystem.Controllers
 
                 
             };
+
+            if (user.Role == "Patient")
+            {
+                var patientId = db.ExecuteScalar<int?>(
+                    "SELECT PatientId FROM Patients WHERE UserId = @UserId",
+                    new { user.UserId }
+                );
+
+                if (patientId.HasValue)
+                    claims.Add(new Claim("PatientId", patientId.Value.ToString()));
+            }
+
+            if (user.Role == "Doctor")
+            {
+                var doctorId = db.ExecuteScalar<int?>(
+                    "SELECT DoctorId FROM Doctors WHERE UserId = @UserId",
+                    new { user.UserId }
+                );
+
+                if (doctorId.HasValue)
+                    claims.Add(new Claim("DoctorId", doctorId.Value.ToString()));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

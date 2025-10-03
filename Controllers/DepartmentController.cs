@@ -81,36 +81,18 @@ namespace HospitalManagementSystem.Controllers
         public async Task<IActionResult> DeleteDepartment(int departmentId)
         {
             using var db = _context.CreateConnection();
-
             using var transaction = db.BeginTransaction();
 
             try
             {
-                // 1️⃣ Get all doctors in this department
-                var doctorIds = (await db.QueryAsync<int>(
-                    "SELECT DoctorId FROM Doctors WHERE DepartmentId = @DeptId",
-                    new { DeptId = departmentId },
-                    transaction
-                )).ToList();
-
-                // 2️⃣ Delete related entries from DoctorPatients
-                if (doctorIds.Any())
-                {
-                    await db.ExecuteAsync(
-                        "DELETE FROM DoctorPatients WHERE DoctorId IN @Ids",
-                        new { Ids = doctorIds },
-                        transaction
-                    );
-                }
-
-                // 3️⃣ Delete doctors in this department
+               
                 await db.ExecuteAsync(
-                    "DELETE FROM Doctors WHERE DepartmentId = @DeptId",
+                    "UPDATE Doctors SET DepartmentId = NULL WHERE DepartmentId = @DeptId",
                     new { DeptId = departmentId },
                     transaction
                 );
 
-                // 4️⃣ Delete the department itself
+                
                 var rows = await db.ExecuteAsync(
                     "DELETE FROM Departments WHERE DepartmentId = @DeptId",
                     new { DeptId = departmentId },
@@ -120,21 +102,19 @@ namespace HospitalManagementSystem.Controllers
                 if (rows == 0)
                 {
                     transaction.Rollback();
-                    return NotFound(); // department not found
+                    return NotFound();
                 }
 
-                // 5️⃣ Commit transaction
                 transaction.Commit();
-
-                return RedirectToAction("Index"); // back to department list
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 transaction.Rollback();
-                // log exception here if needed
                 return StatusCode(500, "Error deleting department: " + ex.Message);
             }
         }
+
 
 
     }

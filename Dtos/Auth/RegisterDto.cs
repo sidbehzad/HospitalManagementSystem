@@ -1,4 +1,4 @@
-﻿namespace HospitalManagementSystem.Dtos
+﻿namespace HospitalManagementSystem.Dtos.Auth
 {
     public class RegisterDto
     {

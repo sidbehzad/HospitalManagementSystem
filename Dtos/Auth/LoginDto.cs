@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HospitalManagementSystem.Dtos
+namespace HospitalManagementSystem.Dtos.Auth
 {
     public class LoginDto
     {

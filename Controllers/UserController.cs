@@ -1,6 +1,6 @@
 ﻿using Dapper;
 using HospitalManagementSystem.Data;
-using HospitalManagementSystem.Dtos;
+using HospitalManagementSystem.Dtos.User;
 using HospitalManagementSystem.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
