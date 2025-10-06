@@ -1,0 +1,34 @@
+﻿@model IEnumerable<HospitalManagementSystem.Dtos.Appointment.AppointmentDto>
+@{
+    ViewBag.Title = "My Appointment Records";
+}
+
+<h2>My Appointment Records</h2>
+
+@if (ViewBag.Message != null)
+{
+    <p>@ViewBag.Message</p>
+}
+
+@if (Model.Any())
+{
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in Model)
+            {
+                <tr>
+                    <td>@record.DoctorName</td>
+                    <td>@record.AppointmentDate.ToString("dd MMM yyyy hh:mm tt")</td>
+                    <td>@record.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

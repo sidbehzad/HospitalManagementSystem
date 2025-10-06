@@ -20,10 +20,17 @@ namespace HospitalManagementSystem.Repository.Appointments
         public async Task<IEnumerable<AppointmentDto>> GetTodayAppointmentsAsync(int doctorId)
         {
             using var db = _context.CreateConnection();
-            var sql = @"SELECT a.AppointmentId, p.Name AS PatientName, a.AppointmentDate, a.Status
-                        FROM Appointments a
-                        JOIN Patients p ON a.PatientId = p.PatientId
-                        WHERE a.DoctorId = @DoctorId AND CAST(a.AppointmentDate AS DATE) = CAST(@Today AS DATE)";
+            var sql = @"
+SELECT a.AppointmentId, 
+       p.Name AS PatientName, 
+       d.Name AS DoctorName, 
+       a.AppointmentDate, 
+       a.Status
+FROM Appointments a
+JOIN Patients p ON a.PatientId = p.PatientId
+JOIN Doctors d ON a.DoctorId = d.DoctorId
+WHERE a.DoctorId = @DoctorId AND CAST(a.AppointmentDate AS DATE) = CAST(@Today AS DATE)";
+
 
             return await db.QueryAsync<AppointmentDto>(sql, new { DoctorId = doctorId, Today = DateTime.UtcNow });
         }

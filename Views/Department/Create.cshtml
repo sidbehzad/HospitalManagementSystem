@@ -1,0 +1,23 @@
+﻿@model HospitalManagementSystem.Dtos.Department.DepartmentDto
+@{
+    ViewBag.Title = "Create Department";
+}
+
+<div class="main-card">
+    <h2>Create Department</h2>
+
+    <form asp-action="Create" method="post">
+        <div class="mb-3">
+            <label>Name</label>
+            <input asp-for="Name" class="form-control" placeholder="Enter department name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-accent">Create</button>
+        <a class="btn btn-custom" href="@Url.Action("Index", "Department")">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

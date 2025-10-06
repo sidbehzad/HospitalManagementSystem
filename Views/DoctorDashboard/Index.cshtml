@@ -1,0 +1,46 @@
+﻿@{
+    ViewBag.Title = "Doctor Dashboard";
+}
+
+<h2>Welcome, @ViewBag.Doctor?.Name</h2>
+
+<h3>Today's Appointments</h3>
+
+@if (ViewBag.TodaysAppointments != null && ViewBag.TodaysAppointments.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Patient Name</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appt in ViewBag.TodaysAppointments)
+            {
+                <tr>
+                    <td>@appt.PatientName</td>
+                    <td>@appt.AppointmentDate.ToString("dd MMM yyyy HH:mm")</td>
+                    <td>@appt.Status</td>
+                    <td>
+                        @if (appt.Status == "Pending")
+                        {
+                            <a asp-controller="Appointment" asp-action="ApproveAppointment" asp-route-id="@appt.AppointmentId" class="btn btn-success btn-sm">Accept</a>
+                            <a asp-controller="Appointment" asp-action="DeclineAppointment" asp-route-id="@appt.AppointmentId" class="btn btn-danger btn-sm">Decline</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No actions</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No appointments today.</p>
+}

@@ -1,0 +1,25 @@
+﻿@model HospitalManagementSystem.Dtos.Department.DepartmentDto
+@{
+    ViewBag.Title = "Update Department";
+}
+
+<div class="main-card">
+    <h2>Update Department</h2>
+
+    <form asp-action="Update" method="post">
+        <input type="hidden" asp-for="DepartmentId" />
+
+        <div class="mb-3">
+            <label>Name</label>
+            <input asp-for="Name" class="form-control" placeholder="Enter department name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-accent">Update</button>
+        <a class="btn btn-custom" href="@Url.Action("Index", "Department")">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

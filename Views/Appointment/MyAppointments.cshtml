@@ -1,0 +1,52 @@
+﻿@model IEnumerable<HospitalManagementSystem.Dtos.Appointment.AppointmentDto>
+@{
+    ViewBag.Title = "My Appointments";
+}
+
+<h2>My Appointments</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning">@TempData["Error"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p>You have no appointments.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Doctor</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appt in Model)
+            {
+                <tr>
+                    <td>@appt.DoctorName</td>
+                    <td>@appt.AppointmentDate.ToString("dd MMM yyyy hh:mm tt")</td>
+                    <td>@appt.Status</td>
+                    <td>
+                        @if (appt.Status == "Pending")
+                        {
+                            <form method="post" asp-action="Cancel">
+                                <input type="hidden" name="id" value="@appt.AppointmentId" />
+                                <button class="btn btn-accent btn-sm" onclick="return confirm('Are you sure to cancel this appointment?')">Cancel</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">@appt.Status</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

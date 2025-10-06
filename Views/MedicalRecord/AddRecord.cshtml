@@ -1,0 +1,44 @@
+﻿@model HospitalManagementSystem.Dtos.MedicalRecord.AddRecordDto
+@{
+    ViewBag.Title = "Add Medical Record";
+}
+
+<div class="container mt-5">
+    <div class="main-card">
+        <h2>Add Medical Record</h2>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-warning">@TempData["Error"]</div>
+        }
+
+        <form asp-action="AddRecord" method="post">
+            <input type="hidden" asp-for="PatientId" />
+
+            <div class="mb-3">
+                <label asp-for="Diagnosis" class="form-label">Diagnosis</label>
+                <input asp-for="Diagnosis" class="form-control" />
+                <span asp-validation-for="Diagnosis" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Treatment" class="form-label">Treatment</label>
+                <input asp-for="Treatment" class="form-control" />
+                <span asp-validation-for="Treatment" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="RecordDate" class="form-label">Date</label>
+                <input asp-for="RecordDate" class="form-control" type="datetime-local" />
+                <span asp-validation-for="RecordDate" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-custom">Save Record</button>
+            <a asp-action="ViewPatientHistory" asp-route-patientId="@Model.PatientId" class="btn btn-accent ms-2">Back to History</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

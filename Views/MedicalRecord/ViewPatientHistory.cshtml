@@ -1,0 +1,39 @@
+﻿@model IEnumerable<HospitalManagementSystem.Models.MedicalRecord>
+
+@{
+    ViewBag.Title = "Patient Medical History";
+}
+
+<h2>Medical History</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p>No medical records found for this patient.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Diagnosis</th>
+                <th>Treatment</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in Model)
+            {
+                <tr>
+                    <td>@record.Diagnosis</td>
+                    <td>@record.Treatment</td>
+                    <td>@record.RecordDate.ToString("dd-MM-yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

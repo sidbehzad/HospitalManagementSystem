@@ -1,0 +1,50 @@
+﻿@model IEnumerable<HospitalManagementSystem.Models.Bill>
+
+@{
+    ViewBag.Title = "My Bills";
+}
+
+<h2>My Bills</h2>
+
+@if (!Model.Any())
+{
+    <p>You have no bills at the moment.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr style="background-color:#6D9773; color:#fff;">
+                <th>Bill ID</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bill in Model)
+            {
+                <tr>
+                    <td>@bill.BillId</td>
+                    <td>@bill.Amount.ToString("C")</td>
+                    <td>@bill.PaymentStatus</td>
+                    <td>@bill.BillDate.ToString("dd-MM-yyyy")</td>
+                    <td>
+                        @if (bill.PaymentStatus == "Pending")
+                        {
+                            <form method="post" asp-action="PayBill">
+                                <input type="hidden" name="billId" value="@bill.BillId" />
+                                <button type="submit" class="btn btn-accent">Pay Now</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-success">Paid</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

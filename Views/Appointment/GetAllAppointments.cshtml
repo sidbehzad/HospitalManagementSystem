@@ -1,0 +1,42 @@
+﻿@model IEnumerable<HospitalManagementSystem.Dtos.Appointment.AppointmentDto>
+
+@if (!Model.Any())
+{
+    <p>No appointments found.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Doctor</th>
+                <th>Patient</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appt in Model)
+            {
+                <tr>
+                    <td>@appt.DoctorName</td>
+                    <td>@appt.PatientName</td>
+                    <td>@appt.AppointmentDate.ToString("dd MMM yyyy hh:mm tt")</td>
+                    <td>@appt.Status</td>
+                    <td>
+                        @if (appt.Status == "Pending")
+                        {
+                            <a class="btn btn-custom btn-sm" href="@Url.Action("ApproveAppointment", "Appointment", new { id = appt.AppointmentId })">Approve</a>
+                            <a class="btn btn-accent btn-sm" href="@Url.Action("DeclineAppointment", "Appointment", new { id = appt.AppointmentId })">Decline</a>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">@appt.Status</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

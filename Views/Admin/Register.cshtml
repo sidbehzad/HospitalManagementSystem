@@ -1,0 +1,35 @@
+﻿@model HospitalManagementSystem.Dtos.Auth.RegisterDto
+@{
+    ViewBag.Title = "Register Admin";
+}
+
+<div class="main-card">
+    <h2>Register Admin</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <form asp-action="Register" method="post">
+        <div class="mb-3">
+            <label>Email</label>
+            <input asp-for="Email" class="form-control" required />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label>Name</label>
+            <input asp-for="Name" class="form-control" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label>Password</label>
+            <input asp-for="Password" type="password" class="form-control" required />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-custom">Register Admin</button>
+    </form>
+</div>

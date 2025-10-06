@@ -1,0 +1,15 @@
+﻿@{
+    ViewBag.Title = "Generate Bill";
+    int patientId = ViewBag.PatientId;
+}
+
+<h2>Generate Bill for Patient ID: @patientId</h2>
+
+<form method="post" asp-action="GenerateBill">
+    <input type="hidden" name="patientId" value="@patientId" />
+    <div class="mb-3">
+        <label>Amount</label>
+        <input type="number" step="0.01" name="amount" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-accent">Generate Bill</button>
+</form>

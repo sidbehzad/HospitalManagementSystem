@@ -1,0 +1,63 @@
+﻿@{
+    ViewBag.Title = "Admin Dashboard";
+    var users = Model as IEnumerable<HospitalManagementSystem.Models.User>;
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4" style="color:#0C3B2E;">Admin Dashboard</h2>
+
+    <div class="row g-4 mb-4">
+        <!-- Doctors Count -->
+        <div class="col-md-6">
+            <div class="card text-white" style="background-color:#6D9773; border-radius:16px;">
+                <div class="card-body">
+                    <h5 class="card-title">Total Doctors</h5>
+                    <p class="card-text display-4">@ViewBag.DoctorCount</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patients Count -->
+        <div class="col-md-6">
+            <div class="card text-dark" style="background-color:#FFBA00; border-radius:16px;">
+                <div class="card-body">
+                    <h5 class="card-title">Total Patients</h5>
+                    <p class="card-text display-4">@ViewBag.PatientCount</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="mb-4">
+        <a href="@Url.Action("RegisterDoctor", "AdminDashboard")" class="btn btn-accent mb-3">Register New Doctor</a>
+
+        <h4 style="color:#0C3B2E;">Admins & Doctors</h4>
+        <table class="table table-bordered mt-2">
+            <thead class="table-dark">
+                <tr>
+                    <th>User ID</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in users)
+                {
+                    <tr>
+                        <td>@user.UserId</td>
+                        <td>@user.Email</td>
+                        <td>@user.Role</td>
+                        <td>
+                            <a href="@Url.Action("EditUser", "AdminDashboard", new { id = user.UserId })" class="btn btn-custom btn-sm">Edit</a>
+                            <form method="post" action="@Url.Action("DeleteUser", "AdminDashboard", new { id = user.UserId })" style="display:inline;">
+                                <button type="submit" class="btn btn-accent btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

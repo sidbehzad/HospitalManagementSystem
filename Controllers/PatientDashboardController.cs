@@ -1,60 +1,51 @@
-﻿using HospitalManagementSystem.Dtos.User;
-using HospitalManagementSystem.Repository.Users;
+﻿using HospitalManagementSystem.Repository.Users;
+using HospitalManagementSystem.Data;
 using Microsoft.AspNetCore.Mvc;
+using Dapper;
+using System.Security.Claims;
 
 namespace HospitalManagementSystem.Controllers
 {
     public class PatientDashboardController : Controller
     {
-
         private readonly IUsersRepository _repo;
+        private readonly DapperContext _context;
 
-        public PatientDashboardController(IUsersRepository repo)
+        public PatientDashboardController(IUsersRepository repo, DapperContext context)
         {
             _repo = repo;
-        }
-        public IActionResult Index()
-        {
-            return View();
+            _context = context;
         }
 
-
-        public IActionResult Details()
+        public async Task<IActionResult> Index()
         {
+            int patientId = int.Parse(User.FindFirstValue("PatientId"));
+
+            using var db = _context.CreateConnection();
+            var patient = await db.QueryFirstOrDefaultAsync<dynamic>(
+                "SELECT p.PatientId, p.UserId, p.Name, u.Email " +
+                "FROM Patients p " +
+                "JOIN Users u ON p.UserId = u.UserId " +
+                "WHERE p.PatientId = @PatientId",
+                new { PatientId = patientId });
+
+            ViewBag.Patient = patient;
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> EditPatient(int id)
+        public async Task<IActionResult> EditProfile()
         {
-            var user = await _repo.GetByIdAsync(id);
-            if (user == null) return NotFound();
+            int patientId = int.Parse(User.FindFirstValue("PatientId"));
+            using var db = _context.CreateConnection();
+            var patient = await db.QueryFirstOrDefaultAsync<dynamic>(
+                "SELECT p.PatientId, p.UserId, p.Name, u.Email " +
+                "FROM Patients p " +
+                "JOIN Users u ON p.UserId = u.UserId " +
+                "WHERE p.PatientId = @PatientId",
+                new { PatientId = patientId });
 
-            var dto = new EditUserDto
-            {
-                UserId = user.UserId,
-                Email = user.Email,
-                Role = user.Role
-            };
-
-            return View(dto);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EditPatient(EditUserDto dto)
-        {
-            if (!ModelState.IsValid) return View(dto);
-
-            try
-            {
-                if (!await _repo.UpdateUserAsync(dto)) return NotFound();
-                return RedirectToAction("Index");
-            }
-            catch
-            {
-                ModelState.AddModelError("", "Error updating user.");
-                return View(dto);
-            }
+            return View(patient);
         }
     }
 }
