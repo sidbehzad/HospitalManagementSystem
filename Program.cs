@@ -1,4 +1,10 @@
 using HospitalManagementSystem.Data;
+using HospitalManagementSystem.Repository.Appointments;
+using HospitalManagementSystem.Repository.Auths;
+using HospitalManagementSystem.Repository.Billings;
+using HospitalManagementSystem.Repository.Departments;
+using HospitalManagementSystem.Repository.MedicalRecords;
+using HospitalManagementSystem.Repository.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -9,6 +15,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<DapperContext>();
+
+builder.Services.AddScoped<IBillingsRepository, BillingsRepository>();
+builder.Services.AddScoped<IAppointmentsRepository, AppointmentsRepository>();
+builder.Services.AddScoped<IDepartmentsRepository, DepartmentsRepository>();
+builder.Services.AddScoped<IMedicalRecordsRepository, MedicalRecordsRepository>();
+builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+builder.Services.AddScoped<IAuthsRepository, AuthsRepository>();
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {

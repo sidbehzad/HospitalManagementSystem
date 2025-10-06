@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using HospitalManagementSystem.Data;
 using HospitalManagementSystem.Models;
+using HospitalManagementSystem.Repository.Billings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -11,40 +12,43 @@ namespace HospitalManagementSystem.Controllers
 {
     public class BillingController : Controller
     {
-        private readonly DapperContext _context;
+        private readonly IBillingsRepository _repo;
 
-        public BillingController(DapperContext context)
+        public BillingController(IBillingsRepository repo)
         {
-            _context = context;
+            _repo = repo;
         }
 
-      
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> MyBills()
         {
-            int patientId = GetLoggedInPatientId();
-
-            using var connection = _context.CreateConnection();
-            var bills = await connection.QueryAsync<Bill>(
-                "SELECT * FROM Billing WHERE PatientId = @PatientId ORDER BY BillDate DESC",
-                new { PatientId = patientId });
-
-            return View(bills);
+            try
+            {
+                int patientId = GetLoggedInPatientId();
+                var bills = await _repo.GetPatientBillsAsync(patientId);
+                return View(bills);
+            }
+            catch
+            {
+                return StatusCode(500, "Unable to fetch bills.");
+            }
         }
 
         [Authorize(Roles = "Patient")]
         [HttpPost]
         public async Task<IActionResult> PayBill(int billId)
         {
-            using var connection = _context.CreateConnection();
-            await connection.ExecuteAsync(
-                "UPDATE Billing SET PaymentStatus = 'Paid' WHERE BillId = @BillId",
-                new { BillId = billId });
-
-            return RedirectToAction("MyBills");
+            try
+            {
+                await _repo.PayBillAsync(billId);
+                return RedirectToAction("MyBills");
+            }
+            catch
+            {
+                return StatusCode(500, "Unable to pay bill.");
+            }
         }
 
-       
         [Authorize(Roles = "Doctor")]
         [HttpGet]
         public IActionResult GenerateBill(int patientId)
@@ -57,34 +61,31 @@ namespace HospitalManagementSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> GenerateBill(int patientId, decimal amount)
         {
-            using var connection = _context.CreateConnection();
-            await connection.ExecuteAsync(
-                @"INSERT INTO Billing (PatientId, Amount, PaymentStatus, BillDate)
-              VALUES (@PatientId, @Amount, 'Pending', @BillDate)",
-                new { PatientId = patientId, Amount = amount, BillDate = DateTime.Now });
-
-            return RedirectToAction("ViewMyPatientsBills");
+            try
+            {
+                await _repo.GenerateBillAsync(patientId, amount);
+                return RedirectToAction("ViewMyPatientsBills");
+            }
+            catch
+            {
+                return StatusCode(500, "Unable to generate bill.");
+            }
         }
 
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> ViewMyPatientsBills()
         {
-            int doctorId = GetLoggedInDoctorId();
-
-            using var connection = _context.CreateConnection();
-            var bills = await connection.QueryAsync<Bill>(
-                @"SELECT b.BillId, b.PatientId, b.Amount, b.PaymentStatus, b.BillDate, p.Name AS PatientName
-              FROM Billing b
-              JOIN Patients p ON b.PatientId = p.PatientId
-              JOIN DoctorPatients dp ON dp.PatientId = b.PatientId
-              WHERE dp.DoctorId = @DoctorId
-              ORDER BY b.BillDate DESC",
-                new { DoctorId = doctorId });
-
-            return View(bills);
+            try
+            {
+                int doctorId = GetLoggedInDoctorId();
+                var bills = await _repo.GetDoctorPatientsBillsAsync(doctorId);
+                return View(bills);
+            }
+            catch
+            {
+                return StatusCode(500, "Unable to fetch patients' bills.");
+            }
         }
-
-       
 
         private int GetLoggedInPatientId()
         {
@@ -97,7 +98,6 @@ namespace HospitalManagementSystem.Controllers
             var claim = User.FindFirst("DoctorId") ?? throw new Exception("DoctorId claim not found.");
             return int.Parse(claim.Value);
         }
-
 
 
     }

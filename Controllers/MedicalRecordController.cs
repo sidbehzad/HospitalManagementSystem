@@ -1,22 +1,19 @@
-﻿using Dapper;
-using HospitalManagementSystem.Data;
-using HospitalManagementSystem.Dtos.MedicalRecord;
+﻿using HospitalManagementSystem.Dtos.MedicalRecord;
 using HospitalManagementSystem.Models;
+using HospitalManagementSystem.Repository.MedicalRecords;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using System.Security.Claims;
 
 namespace HospitalManagementSystem.Controllers
 {
     public class MedicalRecordController : Controller
     {
-        private readonly DapperContext _context;
-        public MedicalRecordController(DapperContext dapper)
+        private readonly IMedicalRecordsRepository _repo;
+
+        public MedicalRecordController(IMedicalRecordsRepository repo)
         {
-
-            _context = dapper;
+            _repo = repo;
         }
-
 
         [HttpGet]
         public IActionResult AddRecord(int patientId)
@@ -25,56 +22,39 @@ namespace HospitalManagementSystem.Controllers
             return View(model);
         }
 
-
+        [HttpPost]
         public async Task<IActionResult> AddRecord(AddRecordDto dto)
         {
-            if (!ModelState.IsValid)
-                return View(dto);
-
-            using var db = _context.CreateConnection();
+            if (!ModelState.IsValid) return View(dto);
 
             try
             {
-                await db.ExecuteAsync(
-                    "sp_AddMedicalRecord",
-                    new
-                    {
-                        PatientId = dto.PatientId,
-                        DoctorId = User.FindFirstValue("DoctorId"),
-                        Diagnosis = dto.Diagnosis,
-                        Treatment = dto.Treatment,
-                        RecordDate = dto.RecordDate
-                    },
-                    commandType: CommandType.StoredProcedure
-                );
-
+                int doctorId = int.Parse(User.FindFirstValue("DoctorId"));
+                await _repo.AddMedicalRecordAsync(dto, doctorId);
                 return RedirectToAction("ViewPatientHistory", new { patientId = dto.PatientId });
             }
             catch (Exception ex)
             {
-                
                 Console.WriteLine(ex.Message);
-
                 TempData["Error"] = "Unable to save medical record. Please try again.";
                 return View(dto);
             }
         }
-    
 
-    [HttpGet]
+        [HttpGet]
         public async Task<IActionResult> ViewPatientHistory(int patientId)
         {
-            using var db = _context.CreateConnection();
-
-            var records = await db.QueryAsync<MedicalRecord>(
-                "sp_GetPatientHistory",
-                new { PatientId = patientId },
-                commandType: CommandType.StoredProcedure
-            );
-
-            return View(records);
+            try
+            {
+                var records = await _repo.GetPatientHistoryAsync(patientId);
+                return View(records);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                TempData["Error"] = "Unable to fetch patient history.";
+                return View(Enumerable.Empty<MedicalRecord>());
+            }
         }
-
-
     }
 }
