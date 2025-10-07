@@ -1,12 +1,19 @@
 ﻿@{
     ViewBag.Title = "Doctor Dashboard";
+    var doctor = ViewBag.Doctor;
+    var todaysAppointments = ViewBag.TodaysAppointments as List<HospitalManagementSystem.Dtos.Appointment.AppointmentDto>;
+    var allAppointments = ViewBag.AllAppointments as List<HospitalManagementSystem.Dtos.Appointment.AppointmentDto>;
 }
 
-<h2>Welcome, @ViewBag.Doctor?.Name</h2>
+<h2>Welcome, @doctor?.Name</h2>
 
-<h3>Today's Appointments</h3>
+<p>
+    <a class="btn btn-primary" asp-action="EditProfile">Edit Profile</a>
+    <a class="btn btn-warning" asp-action="ViewMyPatientsBills" asp-controller="Billing">View All Patients' Bills</a>
+</p>
 
-@if (ViewBag.TodaysAppointments != null && ViewBag.TodaysAppointments.Any())
+<h4>Today's Appointments (Approved Only)</h4>
+@if (todaysAppointments != null && todaysAppointments.Any())
 {
     <table class="table table-bordered">
         <thead>
@@ -14,11 +21,39 @@
                 <th>Patient Name</th>
                 <th>Date & Time</th>
                 <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appt in todaysAppointments)
+            {
+                <tr>
+                    <td>@appt.PatientName</td>
+                    <td>@appt.AppointmentDate.ToString("dd MMM yyyy HH:mm")</td>
+                    <td>@appt.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No approved appointments today.</p>
+}
+
+<h4>All Appointments</h4>
+@if (allAppointments != null && allAppointments.Any())
+{
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Patient</th>
+                <th>Date & Time</th>
+                <th>Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var appt in ViewBag.TodaysAppointments)
+            @foreach (var appt in allAppointments)
             {
                 <tr>
                     <td>@appt.PatientName</td>
@@ -27,8 +62,13 @@
                     <td>
                         @if (appt.Status == "Pending")
                         {
-                            <a asp-controller="Appointment" asp-action="ApproveAppointment" asp-route-id="@appt.AppointmentId" class="btn btn-success btn-sm">Accept</a>
-                            <a asp-controller="Appointment" asp-action="DeclineAppointment" asp-route-id="@appt.AppointmentId" class="btn btn-danger btn-sm">Decline</a>
+                            <a class="btn btn-success btn-sm" href="@Url.Action("ApproveAppointment", "Appointment", new { id = appt.AppointmentId })">Approve</a>
+                            <a class="btn btn-danger btn-sm" href="@Url.Action("DeclineAppointment", "Appointment", new { id = appt.AppointmentId })">Decline</a>
+                        }
+                        else if (appt.Status == "Approved")
+                        {
+                            <a class="btn btn-warning btn-sm" href="@Url.Action("GenerateBill", "Billing", new { patientId = appt.PatientId })">Generate Bill</a>
+                            <a class="btn btn-info btn-sm" href="@Url.Action("AddRecord", "MedicalRecord", new { patientId = appt.PatientId })">Add Medical Record</a>
                         }
                         else
                         {
@@ -42,5 +82,5 @@
 }
 else
 {
-    <p>No appointments today.</p>
+    <p>No appointments yet.</p>
 }

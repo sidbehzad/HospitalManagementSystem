@@ -4,6 +4,7 @@ using HospitalManagementSystem.Dtos;
 using HospitalManagementSystem.Dtos.Department;
 using HospitalManagementSystem.Models;
 using HospitalManagementSystem.Repository.Departments;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagementSystem.Controllers
@@ -24,9 +25,11 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult Create() => View();
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(DepartmentDto dto)
         {
             if (!ModelState.IsValid) return View(dto);
@@ -44,6 +47,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id)
         {
             var department = await _repo.GetByIdAsync(id);
@@ -59,6 +63,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(DepartmentDto dto)
         {
             if (!ModelState.IsValid) return View(dto);
@@ -76,6 +81,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteDepartment(int departmentId)
         {
             try

@@ -14,20 +14,12 @@
     <form asp-action="Register" method="post">
         <div class="mb-3">
             <label>Email</label>
-            <input asp-for="Email" class="form-control" required />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
-
-        <div class="mb-3">
-            <label>Name</label>
-            <input asp-for="Name" class="form-control" required />
-            <span asp-validation-for="Name" class="text-danger"></span>
+            <input type="email" name="Email" value="@Model?.Email" class="form-control" required />
         </div>
 
         <div class="mb-3">
             <label>Password</label>
-            <input asp-for="Password" type="password" class="form-control" required />
-            <span asp-validation-for="Password" class="text-danger"></span>
+            <input type="password" name="Password" class="form-control" required />
         </div>
 
         <button type="submit" class="btn btn-custom">Register Admin</button>

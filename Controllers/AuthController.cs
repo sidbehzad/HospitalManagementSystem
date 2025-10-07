@@ -1,7 +1,10 @@
 ﻿
 using HospitalManagementSystem.Dtos.Auth;
 using HospitalManagementSystem.Repository.Auths;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HospitalManagementSystem.Controllers
 {
@@ -25,29 +28,46 @@ namespace HospitalManagementSystem.Controllers
             try
             {
                 await _repo.RegisterPatientAsync(dto);
+                TempData["Success"] = "Registration successful! You can now login.";
                 return RedirectToAction("Login");
             }
-            catch
+            catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
+                // Check if exception is due to duplicate email or contact
+                if (ex.Message.Contains("UNIQUE") || ex.Message.Contains("duplicate"))
+                {
+                    if (ex.Message.Contains("Email"))
+                        ModelState.AddModelError("Email", "This email is already registered.");
+                    if (ex.Message.Contains("Contact"))
+                        ModelState.AddModelError("Contact", "This phone number is already registered.");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Registration failed. Please try again.");
+                }
+
                 return View(dto);
             }
         }
+
 
         [HttpGet]
         public IActionResult Login() => View();
 
         [HttpPost]
+        [HttpPost]
         public async Task<IActionResult> Login(LoginDto dto)
         {
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid)
+                return View(dto);
 
             try
             {
                 var tokens = await _repo.LoginAsync(dto);
+
                 if (tokens == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid credentials");
+                    ModelState.AddModelError(string.Empty, "Incorrect email or password."); 
                     return View(dto);
                 }
 
@@ -59,7 +79,17 @@ namespace HospitalManagementSystem.Controllers
                     Secure = true
                 });
 
-                return RedirectToAction("Dashboard", "Home");
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadJwtToken(tokens.AccessToken);
+                var role = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+                return role switch
+                {
+                    "Admin" => RedirectToAction("Index", "AdminDashboard"),
+                    "Doctor" => RedirectToAction("Index", "DoctorDashboard"),
+                    "Patient" => RedirectToAction("Index", "PatientDashboard"),
+                    _ => RedirectToAction("Index", "Home")
+                };
             }
             catch
             {
@@ -67,6 +97,8 @@ namespace HospitalManagementSystem.Controllers
                 return View(dto);
             }
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
@@ -83,5 +115,19 @@ namespace HospitalManagementSystem.Controllers
                 return StatusCode(500, "An error occurred while refreshing the token.");
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            // Remove JWT cookie
+            if (Request.Cookies.ContainsKey("AuthToken"))
+            {
+                Response.Cookies.Delete("AuthToken");
+            }
+
+            // Redirect to login page
+            return RedirectToAction("Login", "Auth");
+        }
+
     }
 }

@@ -18,7 +18,12 @@ namespace HospitalManagementSystem.Controllers
         {
             _repo = repo;
         }
-
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Index()
+        {
+            var bills = await _repo.GetAllBillsAsync(); 
+            return View(bills);
+        }
         [Authorize(Roles = "Patient")]
         public async Task<IActionResult> MyBills()
         {
@@ -34,7 +39,7 @@ namespace HospitalManagementSystem.Controllers
             }
         }
 
-        [Authorize(Roles = "Patient")]
+        [Authorize(Roles = "Patient,Admin")]
         [HttpPost]
         public async Task<IActionResult> PayBill(int billId)
         {

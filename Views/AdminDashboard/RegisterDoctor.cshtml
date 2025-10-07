@@ -1,0 +1,30 @@
+﻿@model HospitalManagementSystem.Dtos.User.RegisterDoctorDto
+
+<h2>Register Doctor</h2>
+<form asp-action="RegisterDoctor" method="post">
+    <div class="mb-3">
+        <label>Name</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Email</label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Password</label>
+        <input asp-for="Password" type="password" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Specialization</label>
+        <input asp-for="Specialization" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Department</label>
+        <select asp-for="DepartmentId" class="form-control" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentId", "Name"))">
+            <option value="">-- Select Department --</option>
+        </select>
+        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Register</button>
+</form>

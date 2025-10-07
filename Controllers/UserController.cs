@@ -2,6 +2,7 @@
 
 using HospitalManagementSystem.Models;
 using HospitalManagementSystem.Repository.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HospitalManagementSystem.Controllers
@@ -14,7 +15,7 @@ namespace HospitalManagementSystem.Controllers
         {
             _repo = repo;
         }
-
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             try
@@ -29,9 +30,11 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult RegisterDoctor() => View();
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterDoctor(RegisterDoctorDto dto)
         {
             if (!ModelState.IsValid) return View(dto);
@@ -49,6 +52,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EditUser(int id)
         {
             var user = await _repo.GetByIdAsync(id);
@@ -65,6 +69,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EditUser(EditUserDto dto)
         {
             if (!ModelState.IsValid) return View(dto);
@@ -82,6 +87,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int userId)
         {
             try

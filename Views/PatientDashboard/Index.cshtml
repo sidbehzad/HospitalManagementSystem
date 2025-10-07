@@ -7,36 +7,39 @@
     <h2 class="mb-4" style="color:#0C3B2E;">Welcome, @patient.Name</h2>
 
     <div class="row g-4">
-        <!-- Patient Profile Card -->
-        <div class="col-md-4">
-            <div class="card" style="background-color:#6D9773; color:#fff; border-radius:16px;">
-                <div class="card-body">
-                    <h5 class="card-title">Profile</h5>
-                    <p class="card-text"><strong>Email:</strong> @patient.Email</p>
-                    <a href="@Url.Action("EditProfile", "PatientDashboard")" class="btn btn-accent mt-2">Edit Profile</a>
-                </div>
+        <!-- Profile -->
+        <div class="col-md-3">
+            <div class="card bg-success text-white rounded-3 p-3">
+                <h5>Profile</h5>
+                <p><strong>Email:</strong> @patient.Email</p>
+                <a class="btn btn-light btn-sm" href="@Url.Action("EditProfile", "PatientDashboard")">Edit Profile</a>
             </div>
         </div>
 
-        <!-- Appointments Card -->
-        <div class="col-md-4">
-            <div class="card" style="background-color:#B46617; color:#fff; border-radius:16px;">
-                <div class="card-body">
-                    <h5 class="card-title">Appointments</h5>
-                    <p class="card-text">View or cancel your upcoming appointments</p>
-                    <a href="@Url.Action("MyAppointments", "Appointment")" class="btn btn-accent mt-2">My Appointments</a>
-                </div>
+        <!-- Appointments -->
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark rounded-3 p-3">
+                <h5>Appointments</h5>
+                <p>View or cancel your upcoming appointments</p>
+                <a class="btn btn-dark btn-sm" href="@Url.Action("MyAppointments", "Appointment")">My Appointments</a>
             </div>
         </div>
 
-        <!-- Billing Card -->
-        <div class="col-md-4">
-            <div class="card" style="background-color:#FFBA00; color:#0C3B2E; border-radius:16px;">
-                <div class="card-body">
-                    <h5 class="card-title">Billing</h5>
-                    <p class="card-text">Check and pay your bills</p>
-                    <a href="@Url.Action("MyBills", "Billing")" class="btn btn-custom mt-2">My Bills</a>
-                </div>
+        <!-- Billing -->
+        <div class="col-md-3">
+            <div class="card bg-info text-white rounded-3 p-3">
+                <h5>Billing</h5>
+                <p>Check and pay your bills</p>
+                <a class="btn btn-light btn-sm" href="@Url.Action("MyBills", "Billing")">My Bills</a>
+            </div>
+        </div>
+
+        <!-- Medical Records -->
+        <div class="col-md-3">
+            <div class="card bg-primary text-white rounded-3 p-3">
+                <h5>Medical History</h5>
+                <p>View your past medical records</p>
+                <a class="btn btn-light btn-sm" href="@Url.Action("ViewPatientHistory", "MedicalRecord", new { patientId = patient.PatientId })">View History</a>
             </div>
         </div>
     </div>

@@ -44,41 +44,24 @@ namespace HospitalManagementSystem.Repository.Departments
             return rows > 0;
         }
 
+
+
         public async Task<bool> DeleteAsync(int departmentId)
         {
             using var db = _context.CreateConnection();
-            using var transaction = db.BeginTransaction();
+            
 
-            try
-            {
-                // Set doctors' DepartmentId to NULL
-                await db.ExecuteAsync(
-                    "UPDATE Doctors SET DepartmentId=NULL WHERE DepartmentId=@DeptId",
-                    new { DeptId = departmentId },
-                    transaction
-                );
+            var rows = await db.ExecuteAsync(
+                "DELETE FROM Departments WHERE DepartmentId = @DeptId",
+                new { DeptId = departmentId }
+            );
 
-                // Delete the department
-                var rows = await db.ExecuteAsync(
-                    "DELETE FROM Departments WHERE DepartmentId=@DeptId",
-                    new { DeptId = departmentId },
-                    transaction
-                );
-
-                if (rows == 0)
-                {
-                    transaction.Rollback();
-                    return false;
-                }
-
-                transaction.Commit();
-                return true;
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
+            return rows > 0;
         }
+
+
+
+
+
     }
 }

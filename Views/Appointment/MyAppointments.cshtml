@@ -5,6 +5,7 @@
 
 <h2>My Appointments</h2>
 
+<a class="btn btn-primary" href="@Url.Action("Book", "Appointment")">Book New Appointment</a>
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-warning">@TempData["Error"]</div>

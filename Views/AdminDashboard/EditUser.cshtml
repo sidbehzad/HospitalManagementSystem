@@ -1,0 +1,19 @@
+﻿@model HospitalManagementSystem.Dtos.User.EditUserDto
+
+<h2>Edit User</h2>
+<form asp-action="EditUser" method="post">
+    <input type="hidden" asp-for="UserId" />
+    <div class="mb-3">
+        <label>Email</label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Role</label>
+        <select asp-for="Role" class="form-control">
+            <option value="Admin" selected="@Model.Role==" Admin"">Admin</option>
+            <option value="Doctor" selected="@Model.Role==" Doctor"">Doctor</option>
+            <option value="Patient" selected="@Model.Role==" Patient"">Patient</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>

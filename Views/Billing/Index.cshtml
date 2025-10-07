@@ -1,0 +1,29 @@
+﻿@model IEnumerable<HospitalManagementSystem.Models.Bill>
+@{
+    ViewBag.Title = "All Bills";
+}
+
+<h2>All Bills</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Bill ID</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Bill Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var bill in Model)
+        {
+            <tr>
+                <td>@bill.BillId</td>
+               
+                <td>@bill.Amount.ToString("C")</td>
+                <td>@bill.PaymentStatus</td>
+                <td>@bill.BillDate.ToString("dd MMM yyyy")</td>
+            </tr>
+        }
+    </tbody>
+</table>

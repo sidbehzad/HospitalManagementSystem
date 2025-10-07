@@ -1,29 +1,24 @@
 ﻿@model HospitalManagementSystem.Dtos.Appointment.BookAppointmentDto
-@{
-    ViewBag.Title = "Book Appointment";
-}
 
-<div class="main-card">
-    <h2>Book Appointment</h2>
+<h2>Book Appointment</h2>
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-warning">@TempData["Error"]</div>
-    }
+<form asp-action="Book" method="post">
+    <div class="mb-3">
+        <label asp-for="DoctorId">Select Doctor</label>
+        <select asp-for="DoctorId" class="form-control" asp-items="ViewBag.Doctors">
+            <option value="">-- Select Doctor --</option>
+        </select>
+        <span asp-validation-for="DoctorId" class="text-danger"></span>
+    </div>
 
-    <form asp-action="Book" method="post">
-        <input type="hidden" asp-for="DoctorId" />
+    <div class="mb-3">
+        <label asp-for="AppointmentDate">Appointment Date</label>
+        <input asp-for="AppointmentDate" type="date" class="form-control" />
+        <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+    </div>
 
-        <div class="mb-3">
-            <label>Appointment Date</label>
-            <input asp-for="AppointmentDate" type="datetime-local" class="form-control" />
-            <span asp-validation-for="AppointmentDate" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-accent">Book</button>
-        <a class="btn btn-custom" href="@Url.Action("MyAppointments", "Appointment")">Cancel</a>
-    </form>
-</div>
+    <button type="submit" class="btn btn-primary">Book Appointment</button>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

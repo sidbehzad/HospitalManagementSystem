@@ -8,5 +8,6 @@ namespace HospitalManagementSystem.Repository.Billings
         Task PayBillAsync(int billId);
         Task GenerateBillAsync(int patientId, decimal amount);
         Task<IEnumerable<Bill>> GetDoctorPatientsBillsAsync(int doctorId);
+        Task<IEnumerable<Bill>> GetAllBillsAsync();
     }
 }

@@ -1,6 +1,10 @@
-﻿using HospitalManagementSystem.Dtos.Appointment;
+﻿using Dapper;
+using HospitalManagementSystem.Data;
+using HospitalManagementSystem.Dtos.Appointment;
 using HospitalManagementSystem.Repository.Appointments;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 
 namespace HospitalManagementSystem.Controllers
@@ -8,31 +12,38 @@ namespace HospitalManagementSystem.Controllers
     public class AppointmentController : Controller
     {
         private readonly IAppointmentsRepository _repo;
+        private readonly DapperContext _context;
 
-        public AppointmentController(IAppointmentsRepository repo)
+        public AppointmentController(IAppointmentsRepository repo, DapperContext context)
         {
             _repo = repo;
+            _context = context;
         }
 
-        // Doctor views today's appointments
+        
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> MyTodayAppointments(int doctorId)
         {
             var appointments = await _repo.GetTodayAppointmentsAsync(doctorId);
             return PartialView(appointments);
         }
 
+
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> GetAllAppointments()
         {
-            var result = await _repo.GetAllAppointmentsAsync();
-            return PartialView(result);
+            int doctorId = int.Parse(User.FindFirstValue("DoctorId"));
+            var appointments = await _repo.GetAllAppointmentsForDoctorAsync(doctorId);
+            return PartialView(appointments);
         }
 
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> ApproveAppointment(int id)
         {
             try
             {
                 if (!await _repo.ApproveAppointmentAsync(id)) return NotFound();
-                return RedirectToAction("Dashboard");
+                return RedirectToAction("Index","DoctorDashboard");
             }
             catch
             {
@@ -40,12 +51,14 @@ namespace HospitalManagementSystem.Controllers
             }
         }
 
+
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> DeclineAppointment(int id)
         {
             try
             {
                 if (!await _repo.DeclineAppointmentAsync(id)) return NotFound();
-                return RedirectToAction("Dashboard");
+                return RedirectToAction("Index", "DoctorDashboard");
             }
             catch
             {
@@ -53,17 +66,28 @@ namespace HospitalManagementSystem.Controllers
             }
         }
 
+
+
         [HttpGet]
-        public IActionResult Book(int doctorId) => View(new BookAppointmentDto
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> Book()
         {
-            DoctorId = doctorId,
-            AppointmentDate = DateTime.Now.AddDays(1)
-        });
+            await PopulateDoctorsDropdownAsync();
+            return View(new BookAppointmentDto
+            {
+                AppointmentDate = DateTime.Now.AddDays(1)
+            });
+        }
 
         [HttpPost]
+        [Authorize(Roles = "Patient")]
         public async Task<IActionResult> Book(BookAppointmentDto dto)
         {
-            if (!ModelState.IsValid) return View(dto);
+            if (!ModelState.IsValid)
+            {
+                await PopulateDoctorsDropdownAsync(); 
+                return View(dto);
+            }
 
             try
             {
@@ -74,10 +98,28 @@ namespace HospitalManagementSystem.Controllers
             catch
             {
                 TempData["Error"] = "Unable to book appointment.";
+                await PopulateDoctorsDropdownAsync(); 
                 return View(dto);
             }
         }
 
+        
+        private async Task PopulateDoctorsDropdownAsync()
+        {
+            using var db = _context.CreateConnection();
+            var doctors = await db.QueryAsync<dynamic>(@"
+        SELECT DoctorId, Name, Specialization 
+        FROM Doctors
+    ");
+
+            ViewBag.Doctors = doctors.Select(d => new SelectListItem
+            {
+                Value = d.DoctorId.ToString(),
+                Text = $"{d.Name} ({d.Specialization})"
+            }).ToList();
+        }
+
+        [Authorize(Roles = "Patient")]
         [HttpGet]
         public async Task<IActionResult> MyAppointments()
         {
@@ -86,6 +128,8 @@ namespace HospitalManagementSystem.Controllers
             return View(appointments);
         }
 
+
+        [Authorize(Roles = "Patient")]
         [HttpPost]
         public async Task<IActionResult> Cancel(int id)
         {
@@ -102,6 +146,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Patient,Doctor")]
         public async Task<IActionResult> GetPatientRecords()
         {
             var patientIdStr = User.FindFirstValue("PatientId");

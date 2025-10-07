@@ -1,6 +1,7 @@
 ﻿using HospitalManagementSystem.Dtos.MedicalRecord;
 using HospitalManagementSystem.Models;
 using HospitalManagementSystem.Repository.MedicalRecords;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -16,6 +17,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Doctor")]
         public IActionResult AddRecord(int patientId)
         {
             var model = new AddRecordDto { PatientId = patientId, RecordDate = DateTime.Now };
@@ -23,6 +25,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> AddRecord(AddRecordDto dto)
         {
             if (!ModelState.IsValid) return View(dto);
@@ -42,6 +45,7 @@ namespace HospitalManagementSystem.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Patient,Doctor")]
         public async Task<IActionResult> ViewPatientHistory(int patientId)
         {
             try

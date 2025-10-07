@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Dapper;
 using HospitalManagementSystem.Data;
 using System.Data;
+using HospitalManagementSystem.Dtos;
 
 namespace HospitalManagementSystem.Controllers
 {
@@ -17,16 +18,16 @@ namespace HospitalManagementSystem.Controllers
             _context = context;
         }
 
-        // GET: Show form to register admin
+        
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // POST: Save new admin
+       
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterDto dto)
+        public async Task<IActionResult> Register(AdminRegisterDto dto)
         {
             if (!ModelState.IsValid) return View(dto);
 
@@ -36,16 +37,9 @@ namespace HospitalManagementSystem.Controllers
                 string hashedPassword = hasher.HashPassword(null, dto.Password);
 
                 using var db = _context.CreateConnection();
-                var parameters = new DynamicParameters();
-                parameters.Add("@Email", dto.Email);
-                parameters.Add("@PasswordHash", hashedPassword);
-                parameters.Add("@Name", dto.Name);
-                parameters.Add("@UserId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                await db.ExecuteAsync(
-                    "INSERT INTO Users (Email, PasswordHash, Role) VALUES (@Email, @PasswordHash, 'Admin')",
-                    new { dto.Email, PasswordHash = hashedPassword }
-                );
+                var sql = "INSERT INTO Users (Email, PasswordHash, Role) VALUES (@Email, @PasswordHash, 'Admin')";
+                await db.ExecuteAsync(sql, new { dto.Email, PasswordHash = hashedPassword });
 
                 TempData["Success"] = "Admin registered successfully!";
                 return RedirectToAction("Register");
