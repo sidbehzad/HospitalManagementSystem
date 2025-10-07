@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<DapperContext>();
-
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IBillingsRepository, BillingsRepository>();
 builder.Services.AddScoped<IAppointmentsRepository, AppointmentsRepository>();
 builder.Services.AddScoped<IDepartmentsRepository, DepartmentsRepository>();
@@ -67,6 +67,7 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseMiddleware<TokenRefreshMiddleware>();
 app.UseRouting();
 
 app.UseAuthentication();
